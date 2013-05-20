@@ -5,7 +5,7 @@ import database._
 import Driver._
 import scala.collection.mutable.ListBuffer
 import database.Table
-import database.Index
+import database.DbIndex
 import database.Column
 
 /**
@@ -24,7 +24,7 @@ object BackendDriver {
    */
   def getAllIndices() = {
     val query = Procedures.selectAllIndices.getInstantiatedQuery()
-    val out = new ListBuffer[Index]()
+    val out = new ListBuffer[DbIndex]()
 
     executeQueryWithStatement(query,
       {(res:ResultSet) => {
@@ -33,7 +33,7 @@ object BackendDriver {
           val tableName = res.getString("tablename")
           val indexDef = res.getString("indexdef")
 
-          val index = Index(indexName, indexDef, tableName, isMaterialized = true)
+          val index = DbIndex.getIndexFromDb(indexName, indexDef, tableName)
           out += index
         }
       }}
@@ -105,18 +105,13 @@ object BackendDriver {
     scala.xml.XML.loadString(xmlBuilder.toString())
   }
 
-  def addHypotheticalIndex(index: Index) {
-    addHypotheticalIndex(index.name, index.table, index.columns)
-  }
-
-  def addHypotheticalIndex(name: String, t: Table, cols: List[Column]) {
-    val colString = cols.map(_.name).mkString("(", ", ", ")")
-
-    val query = s"CREATE HYPOTHETICAL INDEX $name ON ${t.name} $colString)"
+  def addHypotheticalIndex(index: DbIndex) {
+    val query = index.indexDef
     executeQueryWithStatement(query)
   }
 
-  def dropHypotheticalIndex(index: Index) {
+
+  def dropHypotheticalIndex(index: DbIndex) {
     if (!index.isHypothetical) {
       throw new IllegalArgumentException(s"$index is not hypothetical! bug")
     }

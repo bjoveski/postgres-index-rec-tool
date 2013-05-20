@@ -11,13 +11,13 @@ import scala.collection.mutable
  */
 case class Table(name: String,
             columns: mutable.HashMap[String, Column],
-            indices: mutable.HashMap[String, Index]) {
+            indices: mutable.HashMap[String, DbIndex]) {
 
   def insertColumns(cols: List[Column]) {
     cols.foreach(col => columns.put(col.name, col))
   }
 
-  def insertIndices(inds: List[Index]) {
+  def insertIndices(inds: List[DbIndex]) {
     inds.foreach(ind => indices.put(ind.name, ind))
   }
 
@@ -33,7 +33,7 @@ object Table {
   def apply(name: String) = {
     new Table(name,
       new mutable.HashMap[String, Column](),
-      new mutable.HashMap[String, Index]())
+      new mutable.HashMap[String, DbIndex]())
   }
 
 }

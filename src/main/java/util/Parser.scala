@@ -5,7 +5,7 @@ package util
  */
 object Parser {
 
-  def getUsedIndices(xmlElem: xml.Elem) = {
+  def getUsedIndexNames(xmlElem: xml.Elem) = {
     (xmlElem \\ "Index-Name").map(node => node.text)
   }
 

@@ -11,6 +11,6 @@ package database
 case class Column(name: String, tableName: String) {
 
   def getTable = {
-    Catalog.tables.get(tableName)
+    Catalog.tables(tableName)
   }
 }

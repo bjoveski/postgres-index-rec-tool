@@ -9,6 +9,7 @@ package database
  */
 case class SqlStatement(templateQuery: String) {
 
+  var sampleQuery: String = ""
 
   def getInstantiatedQuery(args: Any*) = {
 
@@ -30,6 +31,15 @@ case class SqlStatement(templateQuery: String) {
 
   override def toString = {
     templateQuery
+  }
+}
+
+object SqlStatement {
+  // sets sample query
+  def apply(templateQuery: String, args: Any*) = {
+    val res = new SqlStatement(templateQuery)
+    res.sampleQuery = res.getInstantiatedQuery(args)
+    res
   }
 }
 

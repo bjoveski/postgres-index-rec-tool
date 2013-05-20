@@ -29,7 +29,7 @@ object Driver {
     val success = stmt.execute(query)
     stmt.close()
     if (!success) {
-      throw new RuntimeException(s"query $query failed!")
+      System.out.println(s"query $query returned false!")
     }
   }
 

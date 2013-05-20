@@ -1,6 +1,8 @@
 package algorithm
 
 import database._
+import requests.CreateIndexRequest
+
 /**
  * Created with IntelliJ IDEA.
  * User: bjoveski
@@ -8,4 +10,19 @@ import database._
  * Time: 2:30 PM
  * To change this template use File | Settings | File Templates.
  */
-case class Configuration(indices: List[Index])
+case class Configuration(indexRequests: Set[CreateIndexRequest]) {
+
+
+  def generateIndices = {
+    indexRequests.map(_.generateIndex())
+  }
+
+}
+
+
+object Configuration {
+//  def apply(indices: Set[Index]) {
+//
+//  }
+}
+

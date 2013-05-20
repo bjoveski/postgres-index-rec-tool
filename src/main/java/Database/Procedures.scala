@@ -33,6 +33,10 @@ object Procedures {
     """.stripMargin)
 
 
+  val createRealIndex = SqlStatement("CREATE INDEX ? ON ? (?)")
+  val createHypotheticalIndex = SqlStatement("CREATE HYPOTHETICAL INDEX ? ON ? (?)")
+
+
   // ------
   // for benchmarks
   val payGetCustSQL = SqlStatement("SELECT c_first, c_middle, c_id, c_street_1, c_street_2, c_city, " +

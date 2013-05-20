@@ -6,6 +6,7 @@ import java.sql.ResultSet
 import util.{BackendDriver, Driver}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import requests.CreateIndexRequest
 
 /**
  * Created with IntelliJ IDEA.
@@ -50,12 +51,32 @@ object Catalog {
   }
 
   def getAllIndices = {
-    val out = new ListBuffer[Index]()
+    val out = new ListBuffer[DbIndex]()
 
     tables.values.foreach(table => {
       table.indices.values.foreach(out.append(_))
     })
 
-    out.toList
+    out.toSet
+  }
+
+  def dropHypotheticalIndex(index: DbIndex) {
+    if (!index.isHypothetical) {
+      throw new IllegalArgumentException(s"index $index couldn't be dropped! it's not hypothetical")
+    }
+
+    BackendDriver.dropHypotheticalIndex(index)
+
+    val table = index.table
+    table.indices.remove(index.name)
+  }
+
+  def addHypotheticalIndex(req: CreateIndexRequest) {
+    if (!req.isHypothetical) {
+      throw new IllegalArgumentException(s"index $req couldn't be added! it's not hypothetical")
+    }
+    val index = DbIndex(req)
+    req.table.indices.put(index.name, index)
+    BackendDriver.addHypotheticalIndex(index)
   }
 }

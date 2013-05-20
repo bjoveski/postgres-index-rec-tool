@@ -1,3 +1,4 @@
+import database.Catalog
 import net.noerd.prequel.DatabaseConfig
 
 /**
@@ -17,6 +18,10 @@ import net.noerd.prequel.DatabaseConfig
 import java.sql._
 
 class test {
+
+
+
+
 
 //  val res = util.Driver.getHypotheticalAnalyze("SELECT * FROM oorder WHERE o_w_id=1 AND o_d_id=5")
 
