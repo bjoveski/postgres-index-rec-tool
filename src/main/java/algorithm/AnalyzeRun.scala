@@ -1,7 +1,8 @@
 package algorithm
 
 import scala.collection.mutable
-import util.BackendDriver
+import util.{Parser, BackendDriver}
+import database.{Catalog, Column}
 
 /**
  * Created with IntelliJ IDEA.
@@ -12,7 +13,8 @@ import util.BackendDriver
  */
 case class AnalyzeRun(query: Query,
                       conf: Configuration,
-                      cost: Double) {
+                      cost: Double,
+                      columns: List[Column]) {
 
 
 
@@ -25,7 +27,8 @@ object AnalyzeRun {
 
   }
 
-  def apply(query: Query, conf: Configuration) {
-
+  def apply(query: Query, conf: Configuration, xmlResult: xml.Elem) = {
+    val columns = Parser.getUsedIndexNames(xmlResult).distinct.map(colName => Catalog.columns(colName)).toList
+    new AnalyzeRun(query, conf, Parser.getTotalCost(xmlResult), columns)
   }
 }

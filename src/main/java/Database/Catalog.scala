@@ -17,7 +17,7 @@ import requests.CreateIndexRequest
  */
 object Catalog {
   val tables = new mutable.HashMap[String, Table]()
-
+  val columns = new mutable.HashMap[String, Column]()
 
   def init() {
     val tableNames = BackendDriver.getTableNames
@@ -31,7 +31,11 @@ object Catalog {
     tables.keys.foreach(tableName => {
       val cols = BackendDriver.getColumnsForTableName(tableName)
       tables(tableName).insertColumns(cols)
+
+      cols.foreach(col => columns.put(col.name, col))
     })
+
+
 
     // insert indices & add them to table
     val inds = BackendDriver.getAllIndices()
@@ -78,5 +82,9 @@ object Catalog {
     val index = DbIndex(req)
     req.table.indices.put(index.name, index)
     BackendDriver.addHypotheticalIndex(index)
+  }
+
+  def runHypotheticalAnalyze(queryString: String) = {
+    BackendDriver.getHypotheticalAnalyze(queryString)
   }
 }
