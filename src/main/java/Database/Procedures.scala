@@ -1,5 +1,7 @@
 package database
 
+import algorithm.Query
+
 /**
  * Created with IntelliJ IDEA.
  * User: bjoveski
@@ -45,4 +47,30 @@ object Procedures {
     " WHERE c_w_id = ? AND c_d_id = ? AND c_last = '?' ORDER BY c_first")
 
 
+
+  // ---------
+//  val q1 = new Query("SELECT avg(rating) FROM review WHERE review.i_id=1;")
+//  val q2 = new Query("SELECT * FROM review, user WHERE user.u_id = review.u_id AND review.u_id=1 " +
+//    "ORDER BY rating LIMIT 10;")
+
+
+
+  val tpcc1 = new Query("""SELECT COUNT(DISTINCT (s_i_id)) AS stock_count
+                       |  FROM order_line, stock
+                       |	WHERE ol_w_id = 3
+                       |	AND ol_d_id = 4
+                       |	AND ol_o_id <  44
+                       |	AND ol_o_id >= 44 - 20
+                       |	AND s_w_id =  4
+                       |	AND s_i_id = ol_i_id
+                       |  AND s_quantity < 100;""".stripMargin,
+    (("ol_w_id" :: "ol_d_id" :: "ol_o_id" :: "ol_i_id" :: Nil).map(col => ("order_line", col)) ::
+    ("s_w_id" :: "s_i_id" :: "s_quantity" :: Nil).map(col => ("stock", col)) :: Nil).flatten)
+
+  val tpcc2 = new Query("""SELECT o_id, o_carrier_id, o_entry_d FROM oorder
+                |			WHERE o_w_id = 3
+                |			AND o_d_id = 2 AND o_c_id = 5
+                |   ORDER BY o_id DESC LIMIT 1;""".stripMargin,
+    List("o_w_id", "o_d_id", "o_id", "o_c_id" ).map(col => ("oorder", col)))
 }
+

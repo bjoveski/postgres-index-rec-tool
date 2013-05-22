@@ -28,7 +28,7 @@ object AnalyzeRun {
   }
 
   def apply(query: Query, conf: Configuration, xmlResult: xml.Elem) = {
-    val columns = Parser.getUsedIndexNames(xmlResult).distinct.map(colName => Catalog.columns(colName)).toList
+    val columns = Parser.getUsedIndexNames(xmlResult).distinct.map(indexName => Catalog.indices(indexName).columns).flatten.toList
     new AnalyzeRun(query, conf, Parser.getTotalCost(xmlResult), columns)
   }
 }

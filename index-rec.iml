@@ -78,6 +78,18 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../oltpbench" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../oltpbench/src" />
+          <root url="file://$MODULE_DIR$/../oltpbench/tests" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>
 

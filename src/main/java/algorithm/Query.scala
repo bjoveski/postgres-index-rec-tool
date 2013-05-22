@@ -9,8 +9,6 @@ import database.SqlStatement
  * Time: 12:01 AM
  * To change this template use File | Settings | File Templates.
  */
-class Query(val sqlStatement: SqlStatement, val args: Any*) {
-  val sqlQuery = sqlStatement.getInstantiatedQuery(args)
-  var xml = null;
+class Query(val sqlQuery: String, val relevantTableColumnNames: List[(String, String)]) {
 
 }

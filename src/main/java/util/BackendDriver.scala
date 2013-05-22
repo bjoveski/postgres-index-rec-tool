@@ -107,6 +107,11 @@ object BackendDriver {
 
   def addHypotheticalIndex(index: DbIndex) {
     val query = index.indexDef
+
+    if (!index.isHypothetical) {
+
+      throw new RuntimeException("bug")
+    }
     executeQueryWithStatement(query)
   }
 

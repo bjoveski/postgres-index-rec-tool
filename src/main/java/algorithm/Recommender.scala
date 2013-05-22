@@ -18,6 +18,41 @@ object Recommender {
   val conf2result = new mutable.HashMap[Configuration, List[AnalyzeRun]]()
   val query2result = new mutable.HashMap[Query, List[AnalyzeRun]]()
 
+
+  /**
+   *
+   * THE FUNCTION
+   */
+  def recommend(numIndices: Int, queries: List[Query]) = {
+    val startTime = System.currentTimeMillis()
+    val confs = generateConfigurations(numIndices, queries)
+    var chptTime = System.currentTimeMillis()
+    var count = 0
+    System.out.println(s"generatedConfs. count=${confs.size}\ttotalTime=${chptTime - startTime}, \t lastTime=${chptTime - startTime}")
+
+    confs.foreach(conf => {
+
+      queries.foreach(query => {
+        //TODO optimization, can get installConf out of here, to the outer loop
+        runHypotheticalAnalyze(conf, query)
+      })
+      count += 1
+      if ((count % 1000) == 0) {
+        System.out.println(s"processing confs.$count done")
+      }
+    })
+    System.out.println(s"runAnalyze. \ttotalTime=${System.currentTimeMillis() - startTime}, " +
+      s"\t lastTime=${System.currentTimeMillis() - chptTime}")
+    chptTime = System.currentTimeMillis()
+
+    val out = getBestConfOverall
+    System.out.println(s"sorted. \ttotalTime=${System.currentTimeMillis() - startTime}, " +
+      s"\t lastTime=${System.currentTimeMillis() - chptTime}")
+
+    out
+  }
+
+
   def installConfiguration(conf: Configuration) {
     val currentIndices: Set[Index] = Catalog.getAllIndices.asInstanceOf[Set[Index]]
     val missingIndices = conf.generateIndices.asInstanceOf[Set[Index]] -- currentIndices
@@ -31,7 +66,7 @@ object Recommender {
             Catalog.dropHypotheticalIndex(r)
           } else {
             // don't drop these guys
-            System.out.println(s"skipped dropping realIndex ")
+//            System.out.println(s"skipped dropping realIndex ")
           }}
         case c: ConfIndex => {
           throw new RuntimeException("bug! shouldn't happen that we have extra config")
@@ -47,12 +82,35 @@ object Recommender {
     verifyConfiguration(conf)
   }
 
-  def generateConfigurations(numIndices: Int) = {
+  /**
+   * generates ALL columns
+   */
+  private def generateAllColumns() = {
+    Catalog.getAllColumns.toSet[Column]
+  }
+
+  /**
+   * generates columns that appear in JOIN/WHERE clauses
+   */
+  private def generateAllRelevantColumns(queries: List[Query]) = {
+    queries.map(query => {
+      query.relevantTableColumnNames.map( tableCol => {
+        Catalog.tables(tableCol._1).columns(tableCol._2)
+      })
+    }).flatten.toSet[Column]
+  }
+
+
+  def generateConfigurations(numIndices: Int, queries: List[Query]) = {
     val dbIndices = Catalog.getAllIndices
     val realIndices = dbIndices.filter(index => !index.isHypothetical)
 
+//    val columnsToBeConsidered = generateAllColumns()
+    val columnsToBeConsidered = generateAllRelevantColumns(queries)
+
+
     val colsForRealIndices = realIndices.map(inx => inx.columns).flatten.toSet
-    val extraColumns = Catalog.getAllColumns.toSet[Column] -- colsForRealIndices
+    val extraColumns = columnsToBeConsidered -- colsForRealIndices
 
     // generate indices for extra columns
     val subsets = generateSubsets[Column](extraColumns, numIndices)
@@ -63,6 +121,7 @@ object Recommender {
       Configuration(reqs)
     })
   }
+
 
   /**
    * takes a set of columns and returns a set of single indices over them

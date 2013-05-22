@@ -4,7 +4,7 @@ import util.BackendDriver
 import requests.CreateIndexRequest
 
 
-abstract class Index(val name: String,val columns: List[Column],val table: Table) {
+abstract class Index(val name: String,val columns: List[Column],val table: Table, val isHypothetical: Boolean) {
   override def hashCode() = {
     name.hashCode()
   }
@@ -29,7 +29,7 @@ case class DbIndex(override val name: String,
            indexDef: String,
            override val columns: List[Column],
            override val table: Table,
-           isHypothetical: Boolean) extends Index(name, columns, table) {
+           override val isHypothetical: Boolean) extends Index(name, columns, table, isHypothetical) {
 
   override def toString = {
     val colString =  columns.map(col => col.name)
@@ -43,7 +43,7 @@ case class ConfIndex(override val name: String,
                      indexDef: String,
                      override val columns: List[Column],
                      override val table: Table,
-                     isHypothetical: Boolean) extends Index(name, columns, table) {
+                     override val isHypothetical: Boolean) extends Index(name, columns, table, isHypothetical) {
 
   override def toString = {
     val colString =  columns.map(col => col.name)

@@ -28,9 +28,9 @@ object Driver {
     val stmt = db.createStatement()
     val success = stmt.execute(query)
     stmt.close()
-    if (!success) {
-      System.out.println(s"query $query returned false!")
-    }
+//    if (!success) {
+//      System.out.println(s"query $query returned false!")
+//    }
   }
 
   def closeConnection() {

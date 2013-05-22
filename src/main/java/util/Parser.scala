@@ -10,7 +10,8 @@ object Parser {
   }
 
   def getTotalCost(xmlElem: xml.Elem) = {
-    ((xmlElem \\ "Total-Cost").text).toDouble
+
+    (xmlElem \"Query" \ "Plan" \ "Total-Cost").text.toDouble
   }
 
 

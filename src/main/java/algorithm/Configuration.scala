@@ -18,9 +18,9 @@ case class Configuration(indexRequests: Set[CreateIndexRequest]) {
     indexRequests.map(_.generateIndex())
   }
 
-  def getUsedIndices(query: Query) {
-    Parser.getUsedIndexNames(query.xml)
-  }
+//  def getUsedIndices(query: Query) = {
+//    Parser.getUsedIndexNames(query.xml)
+//  }
 
 }
 

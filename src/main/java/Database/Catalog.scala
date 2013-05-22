@@ -17,7 +17,7 @@ import requests.CreateIndexRequest
  */
 object Catalog {
   val tables = new mutable.HashMap[String, Table]()
-  val columns = new mutable.HashMap[String, Column]()
+  val indices = new mutable.HashMap[String, Index]()
 
   def init() {
     val tableNames = BackendDriver.getTableNames
@@ -32,17 +32,18 @@ object Catalog {
       val cols = BackendDriver.getColumnsForTableName(tableName)
       tables(tableName).insertColumns(cols)
 
-      cols.foreach(col => columns.put(col.name, col))
     })
-
-
 
     // insert indices & add them to table
     val inds = BackendDriver.getAllIndices()
     inds.foreach(index => {
       tables(index.table.name).indices.put(index.name, index)
+      indices.put(index.name, index)
     })
 
+
+    // clean-up from previous runs
+    dropAllHypotheticalIndices()
   }
 
   def getAllColumns = {
@@ -73,6 +74,7 @@ object Catalog {
 
     val table = index.table
     table.indices.remove(index.name)
+    indices.remove(index.name)
   }
 
   def addHypotheticalIndex(req: CreateIndexRequest) {
@@ -81,7 +83,20 @@ object Catalog {
     }
     val index = DbIndex(req)
     req.table.indices.put(index.name, index)
+    indices.put(index.name, index)
+
     BackendDriver.addHypotheticalIndex(index)
+  }
+
+  def dropAllHypotheticalIndices() {
+    val keysCopy = new Array[String](indices.size)
+    indices.keys.copyToArray(keysCopy)
+
+    keysCopy.foreach(key => {
+      if (indices(key).isHypothetical) {
+        dropHypotheticalIndex(indices(key).asInstanceOf[DbIndex])
+      }
+    })
   }
 
   def runHypotheticalAnalyze(queryString: String) = {
