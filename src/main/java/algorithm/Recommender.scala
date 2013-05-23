@@ -23,7 +23,50 @@ object Recommender {
    *
    * THE FUNCTION
    */
-  def recommend(numIndices: Int, queries: List[Query]) = {
+  def recommend(numIndicesSeed: Int, numIndicesTotal: Int, queries: List[Query]) = {
+
+    // init the indices by calculating the seed
+    val seedConfs = naiveImplementation(numIndicesSeed, queries)
+
+    // greedy part of the algorithm
+    var bestConf = seedConfs.head._1
+    var bestCost = seedConfs.head._2
+    var indicesToBeConsidered = generateIndicesToBeConsidered(bestConf, queries).toList
+    var isDone = false
+
+    Range(numIndicesSeed, numIndicesTotal).foreach(iteration => {
+      if (!isDone) {
+        val out = greedyIteration(bestConf, bestCost, queries, indicesToBeConsidered)
+        if (out.isEmpty) {
+          isDone = true
+        } else {
+          bestConf = out.get._1
+          bestCost = out.get._2
+          indicesToBeConsidered = generateIndicesToBeConsidered(bestConf, queries).toList
+        }
+      } else {
+        // skip
+      }
+    })
+
+    (bestConf, bestCost)
+  }
+
+
+
+  def generateIndicesToBeConsidered(conf: Configuration, queries: List[Query]) = {
+    val columnsToBeConsidered = generateAllRelevantColumns(queries)
+
+
+    val columnsInCurrentConf = conf.generateIndices.map(index => index.columns).flatten.toSet
+    val extraColumns = columnsToBeConsidered -- columnsInCurrentConf
+
+    createSingleIndexRequests(extraColumns)
+  }
+
+
+
+  def naiveImplementation(numIndices: Int, queries: List[Query]) = {
     val startTime = System.currentTimeMillis()
     val confs = generateConfigurations(numIndices, queries)
     var chptTime = System.currentTimeMillis()
@@ -45,11 +88,44 @@ object Recommender {
       s"\t lastTime=${System.currentTimeMillis() - chptTime}")
     chptTime = System.currentTimeMillis()
 
-    val out = getBestConfOverall
+    val out = sortAllConfigurationsByCost
     System.out.println(s"sorted. \ttotalTime=${System.currentTimeMillis() - startTime}, " +
       s"\t lastTime=${System.currentTimeMillis() - chptTime}")
 
     out
+
+  }
+
+
+
+  /**
+   *
+   * @return None if there was no improvement; or
+   *         Some(Configuration, Cost) - the best greedy solution
+   */
+  def greedyIteration(currentConf: Configuration,
+                      currCost: Double,
+                      queries: List[Query],
+                      indicesToBeConsidered: List[CreateIndexRequest]): Option[(Configuration, Double)] = {
+    val confAnalyzeRuns = indicesToBeConsidered.map(indexReq => {
+      val conf = Configuration(currentConf, indexReq)
+
+      val analyzeRuns = queries.map(query => {
+        runHypotheticalAnalyze(conf, query)
+      })
+
+      analyzeRuns
+    })
+
+    val sortedConfs = sortConfigurationsByCost(confAnalyzeRuns)
+
+    // current cost is less than the cost with index! stop here
+    // because we have no improvement
+    if (currCost <= sortedConfs.head._2) {
+      None
+    } else {
+      Some(sortedConfs.head)
+    }
   }
 
 
@@ -108,7 +184,6 @@ object Recommender {
 //    val columnsToBeConsidered = generateAllColumns()
     val columnsToBeConsidered = generateAllRelevantColumns(queries)
 
-
     val colsForRealIndices = realIndices.map(inx => inx.columns).flatten.toSet
     val extraColumns = columnsToBeConsidered -- colsForRealIndices
 
@@ -132,20 +207,30 @@ object Recommender {
     })
   }
 
-  def runHypotheticalAnalyze(conf: Configuration, query: Query) {
+  def runHypotheticalAnalyze(conf: Configuration, query: Query) = {
     installConfiguration(conf)
     val xmlRes = Catalog.runHypotheticalAnalyze(query.sqlQuery)
 
     val res = AnalyzeRun(query, conf, xmlRes)
     updateState(conf, query, res)
+    res
   }
 
 
   /**
    * calculates total cost for each conf, and chooses the minimal one
    */
-  def getBestConfOverall = {
-    val costs = conf2result.values.map(confRuns => {
+  def sortAllConfigurationsByCost = {
+    sortConfigurationsByCost(conf2result.values)
+  }
+
+  /**
+   * @param confAnalyzeRuns the inner list is a list of analyze runs with the same configuration. i.e.
+   *                        the conf runs is a a list of analyze runs grouped by their configuration
+   * @return (configuration, cost) for the workload
+   */
+  def sortConfigurationsByCost(confAnalyzeRuns: Iterable[Iterable[AnalyzeRun]]) = {
+    val costs = confAnalyzeRuns.map(confRuns => {
       val totalCost = confRuns.foldLeft[Double](0)((curCost, run) => curCost + run.cost)
       (confRuns.head.conf, totalCost)
     })

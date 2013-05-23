@@ -26,8 +26,9 @@ case class Configuration(indexRequests: Set[CreateIndexRequest]) {
 
 
 object Configuration {
-//  def apply(indices: Set[Index]) {
-//
-//  }
+  def apply(currentConf: Configuration, indexRequest: CreateIndexRequest) = {
+    val reqs = currentConf.indexRequests.union(Set(indexRequest))
+    new Configuration(reqs)
+  }
 }
 

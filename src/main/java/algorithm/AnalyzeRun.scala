@@ -22,10 +22,10 @@ case class AnalyzeRun(query: Query,
 }
 
 object AnalyzeRun {
-  def run(query: Query, conf: Configuration) {
-
-
-  }
+//  def run(query: Query, conf: Configuration) {
+//
+//
+//  }
 
   def apply(query: Query, conf: Configuration, xmlResult: xml.Elem) = {
     val columns = Parser.getUsedIndexNames(xmlResult).distinct.map(indexName => Catalog.indices(indexName).columns).flatten.toList
