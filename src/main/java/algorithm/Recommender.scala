@@ -15,11 +15,15 @@ import util.Parser
  */
 object Recommender {
 
+  var MULTI_CONST = 10
+
+
   val conf2result = new mutable.HashMap[Configuration, List[AnalyzeRun]]()
   val query2result = new mutable.HashMap[Query, List[AnalyzeRun]]()
   val cols2multiIndices = new mutable.HashSet[Column]()
   val multiIndicesThatAreUsed = new mutable.HashMap[String, CreateIndexRequest]()
   val usedIndices = new mutable.HashMap[String, CreateIndexRequest]()
+  val runs = new mutable.HashMap[(Configuration, Query), AnalyzeRun]()
 
   /**
    *
@@ -39,10 +43,10 @@ object Recommender {
 
 
     // generate good base Configurations with multi indices
-    seedConfs.take(10).map(topConf => {
-      val conf = topConf._1
-      val cost = topConf._2
+    val multiSeedConfs = seedConfs.toSet[(Configuration, Double)].toList.sortBy(c2c => c2c._2)
 
+    multiSeedConfs.take(MULTI_CONST).map(c2c => {
+      val conf = c2c._1
       multiColIndices.foreach(multiColIndex => {
         val newConf = Configuration(conf, multiColIndex)
         installConfiguration(newConf)
@@ -327,31 +331,44 @@ object Recommender {
     installConfiguration(conf)
 
     queries.map(query => {
+      if (runs.contains((conf, query))) {
+        runs((conf, query))
+      } else {
+        val xmlRes = Catalog.runHypotheticalAnalyze(query.sqlQuery)
+
+        val res = AnalyzeRun(query, conf, xmlRes)
+        updateState(conf, query, res)
+        res
+      }
+
+    })
+  }
+
+  def runHypotheticalAnalyzeWithooutInstalling(conf: Configuration, query: Query) = {
+    if (runs.contains((conf, query))) {
+      runs((conf, query))
+    } else {
       val xmlRes = Catalog.runHypotheticalAnalyze(query.sqlQuery)
 
       val res = AnalyzeRun(query, conf, xmlRes)
       updateState(conf, query, res)
       res
-    })
-  }
-
-  def runHypotheticalAnalyzeWithooutInstalling(conf: Configuration, query: Query) = {
-    val xmlRes = Catalog.runHypotheticalAnalyze(query.sqlQuery)
-
-    val res = AnalyzeRun(query, conf, xmlRes)
-    updateState(conf, query, res)
-    res
+    }
   }
 
 
 
   def runHypotheticalAnalyze(conf: Configuration, query: Query) = {
     installConfiguration(conf)
-    val xmlRes = Catalog.runHypotheticalAnalyze(query.sqlQuery)
+    if (runs.contains((conf, query))) {
+      runs((conf, query))
+    } else {
+      val xmlRes = Catalog.runHypotheticalAnalyze(query.sqlQuery)
 
-    val res = AnalyzeRun(query, conf, xmlRes)
-    updateState(conf, query, res)
-    res
+      val res = AnalyzeRun(query, conf, xmlRes)
+      updateState(conf, query, res)
+      res
+    }
   }
 
 
@@ -389,6 +406,8 @@ object Recommender {
     //query2result
     val lst2 = query2result.getOrElse(query, Nil)
     query2result.update(query, res :: lst2)
+
+    runs((conf, query)) = res
 
     // update columns for future work
     res.columns.foreach(col => cols2multiIndices.add(col))

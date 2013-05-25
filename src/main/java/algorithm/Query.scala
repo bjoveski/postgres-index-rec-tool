@@ -9,6 +9,6 @@ import database.SqlStatement
  * Time: 12:01 AM
  * To change this template use File | Settings | File Templates.
  */
-class Query(val sqlQuery: String, val relevantTableColumnNames: List[(String, String)]) {
+case class Query(sqlQuery: String, relevantTableColumnNames: List[(String, String)]) {
 
 }

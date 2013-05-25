@@ -124,7 +124,7 @@ def transform(sqlStmt: SQLStmt): String = {
 
 
 
-  val delivUpdateDeliveryDateSQL = new SQLStmt("UPDATE " + TPCCConstants.TABLENAME_ORDERLINE + " SET ol_delivery_d = ?"
+  val delivUpdateDeliveryDateSQL = new SQLStmt("UPDATE " + TPCCConstants.TABLENAME_ORDERLINE + " SET ol_delivery_d = '2012/4/23'"
     + " WHERE ol_o_id = ?"
     + " AND ol_d_id = ?"
     + " AND ol_w_id = ?");
@@ -225,6 +225,87 @@ def transform(sqlStmt: SQLStmt): String = {
 
   val AorderStatusq = List(ordStatGetNewestOrdSQLq, ordStatGetOrderLinesSQLq,
     payGetCustSQLq, customerByNameSQLq)
+
+
+
+
+
+
+  // payment
+
+  val payUpdateWhseSQL = new SQLStmt("UPDATE " + TPCCConstants.TABLENAME_WAREHOUSE + " SET w_ytd = w_ytd + ?  WHERE w_id = ? ");
+  val payUpdateWhseSQLq = new Query(transform(payUpdateWhseSQL ),
+  List("w_ytd", "w_id").map(col => (TPCCConstants.TABLENAME_WAREHOUSE, col)))
+
+
+
+  val payGetWhseSQL = new SQLStmt("SELECT w_street_1, w_street_2, w_city, w_state, w_zip, w_name"
+    + " FROM " + TPCCConstants.TABLENAME_WAREHOUSE + " WHERE w_id = ?");
+  val payGetWhseSQLq = new Query(transform(payGetWhseSQL),
+  List("w_id").map(col => (TPCCConstants.TABLENAME_WAREHOUSE, col)))
+
+
+
+
+  val payUpdateDistSQL = new SQLStmt("UPDATE " + TPCCConstants.TABLENAME_DISTRICT + " SET d_ytd = d_ytd + ? WHERE d_w_id = ? AND d_id = ?");
+  val payUpdateDistSQLq = new Query(transform(payUpdateDistSQL),
+  List("d_ytd", "d_w_id", "d_id").map(col => (TPCCConstants.TABLENAME_DISTRICT, col)))
+
+
+
+
+
+
+  val payGetDistSQL = new SQLStmt("SELECT d_street_1, d_street_2, d_city, d_state, d_zip, d_name"
+    + " FROM " + TPCCConstants.TABLENAME_DISTRICT + " WHERE d_w_id = ? AND d_id = ?");
+  val payGetDistSQLq = new Query(transform(payGetDistSQL ),
+  List("d_w_id", "d_id").map(col => (TPCCConstants.TABLENAME_DISTRICT, col)))
+
+
+//
+//
+//  val payGetCustSQL = new SQLStmt("SELECT c_first, c_middle, c_last, c_street_1, c_street_2, "
+//    + "c_city, c_state, c_zip, c_phone, c_credit, c_credit_lim, "
+//    + "c_discount, c_balance, c_ytd_payment, c_payment_cnt, c_since FROM " + TPCCConstants.TABLENAME_CUSTOMER + " WHERE "
+//    + "c_w_id = ? AND c_d_id = ? AND c_id = ?");
+//  val payGetCustSQLq = new Query(transform(payGetCustSQL),
+//  List("c_w_id", "c_d_id", "c_id") .map(col => (TPCCConstants.TABLENAME_DISTRICT, col)))
+
+
+
+  val payGetCustCdataSQL = new SQLStmt("SELECT c_data FROM " + TPCCConstants.TABLENAME_CUSTOMER + " WHERE c_w_id = ? AND c_d_id = ? AND c_id = ?");
+  val payGetCustCdataSQLq = new Query(transform(payGetCustCdataSQL ),
+  List("c_w_id", "c_d_id", "c_id") .map(col => (TPCCConstants.TABLENAME_CUSTOMER, col)))
+
+
+  val payUpdateCustBalCdataSQL = new SQLStmt("UPDATE " + TPCCConstants.TABLENAME_CUSTOMER + " SET c_balance = ?, c_ytd_payment = ?, "
+    + "c_payment_cnt = ?, c_data = ? "
+    + "WHERE c_w_id = ? AND c_d_id = ? AND c_id = ?");
+  val payUpdateCustBalCdataSQLq = new Query(transform(payUpdateCustBalCdataSQL ),
+  List("c_w_id", "c_d_id", "c_id") .map(col => (TPCCConstants.TABLENAME_CUSTOMER, col)))
+
+
+
+
+  val payUpdateCustBalSQL = new SQLStmt("UPDATE " + TPCCConstants.TABLENAME_CUSTOMER + " SET c_balance = ?, c_ytd_payment = ?, "
+    + "c_payment_cnt = ? WHERE c_w_id = ? AND c_d_id = ? AND c_id = ?");
+  val payUpdateCustBalSQLq = new Query(transform(payUpdateCustBalSQL),
+  List("c_w_id", "c_d_id", "c_id").map(col => (TPCCConstants.TABLENAME_CUSTOMER, col)))
+
+
+  val Apaymentq = List(payUpdateWhseSQLq, payGetWhseSQLq, payUpdateDistSQLq,
+    payGetDistSQLq,payGetCustSQLq, payGetCustCdataSQLq, payUpdateCustBalCdataSQLq, payUpdateCustBalSQLq)
+//  val payInsertHistSQL = new SQLStmt("INSERT INTO " + TPCCConstants.TABLENAME_HISTORY + " (h_c_d_id, h_c_w_id, h_c_id, h_d_id, h_w_id, h_date, h_amount, h_data) "
+//     + " VALUES (?,?,?,?,?,?,?,?)");
+
+
+//  val customerByNameSQL = new SQLStmt("SELECT c_first, c_middle, c_id, c_street_1, c_street_2, c_city, "
+//    + "c_state, c_zip, c_phone, c_credit, c_credit_lim, c_discount, "
+//    + "c_balance, c_ytd_payment, c_payment_cnt, c_since FROM " + TPCCConstants.TABLENAME_CUSTOMER + " "
+//    + "WHERE c_w_id = ? AND c_d_id = ? AND c_last = ? ORDER BY c_first");
+
+
+
 
 
 }

@@ -23,6 +23,12 @@ case class CreateIndexRequest(table: Table,
     }
   }
 
+
+  override def toString = {
+    val colString =  columns.map(col => col.name)
+    s"CreateIndexReq=[$generateName], table=[${table.name}] ], "
+  }
+
   def generateSqlString() = {
     val colStr = columns.map(_.name).mkString(", ")
     if (isHypothetical) {
