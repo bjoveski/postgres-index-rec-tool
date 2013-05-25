@@ -11,12 +11,15 @@ import database.{Catalog, Column}
  * Time: 12:19 AM
  * To change this template use File | Settings | File Templates.
  */
+/**
+ *
+ * @param columns indicate which columns were used in the index!
+ */
 case class AnalyzeRun(query: Query,
                       conf: Configuration,
                       cost: Double,
-                      columns: List[Column]) {
-
-
+                      columns: List[Column],
+                      indexNames: Traversable[String]) {
 
   //TODO: do we neeed to add the xml of the thing itself?
 }
@@ -28,7 +31,8 @@ object AnalyzeRun {
 //  }
 
   def apply(query: Query, conf: Configuration, xmlResult: xml.Elem) = {
-    val columns = Parser.getUsedIndexNames(xmlResult).distinct.map(indexName => Catalog.indices(indexName).columns).flatten.toList
-    new AnalyzeRun(query, conf, Parser.getTotalCost(xmlResult), columns)
+    val indexNames = Parser.getUsedIndexNames(xmlResult).distinct
+    val columns = indexNames.map(indexName => Catalog.indices(indexName).columns).flatten.toList
+    new AnalyzeRun(query, conf, Parser.getTotalCost(xmlResult), columns, indexNames)
   }
 }
